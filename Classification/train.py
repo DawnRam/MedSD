@@ -28,9 +28,9 @@ from wideresnet import WNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str, default='/data/cyang/CC/Code/MedSD/Data/ISIC', help='dataset root dir')
-parser.add_argument('--csv_file_train', type=str, default='/data/cyang/CC/Code/MedSD/Classification/RAC-MT/data/skin/training.csv', help='training set csv file')
-parser.add_argument('--csv_file_val', type=str, default='/data/cyang/CC/Code/MedSD/Classification/RAC-MT/data/skin/validation.csv', help='validation set csv file')
-parser.add_argument('--csv_file_test', type=str, default='/data/cyang/CC/Code/MedSD/Classification/RAC-MT/data/skin/testing.csv', help='testing set csv file')
+parser.add_argument('--csv_file_train', type=str, default='./data/skin/training_sampled.csv', help='training set csv file')
+parser.add_argument('--csv_file_val', type=str, default='./data/skin/validation.csv', help='validation set csv file')
+parser.add_argument('--csv_file_test', type=str, default='./data/skin/testing.csv', help='testing set csv file')
 parser.add_argument('--exp', type=str, default='baseline_sampled', help='model_name')
 parser.add_argument('--epochs', type=int, default=180, help='maximum epoch number to train')
 parser.add_argument('--batch_size', type=int, default=64, help='batch_size per gpu')

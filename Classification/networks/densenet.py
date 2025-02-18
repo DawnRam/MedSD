@@ -8,7 +8,9 @@ import os
 
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
-os.environ['TORCH_HOME'] = '/data/cyang/anaconda3/envs/torch/models'
+# 设置模型保存路径，优先使用环境变量中的设置，如果没有则使用默认路径
+models_dir = os.getenv('TORCH_HOME', os.path.join(os.path.expanduser('~'), '.torch/models'))
+os.environ['TORCH_HOME'] = models_dir
 
 model_urls = {
     'densenet121': 'https://download.pytorch.org/models/densenet121-a639ec97.pth',
