@@ -40,11 +40,12 @@ parser.add_argument('--deterministic', type=int, default=1, help='whether use de
 parser.add_argument('--seed', type=int, default=1337, help='random seed')
 parser.add_argument('--gpu', type=str, default='0', help='GPU to use')
 parser.add_argument('--sample_ratio', type=float, default=0.05, help='ratio of training data to sample (0-1)')
+parser.add_argument('--output_dir', type=str, default='../output', help='directory to save outputs')
 
 args = parser.parse_args()
 
 train_data_path = args.root_path
-snapshot_path = "../model/" + args.exp + "/"
+snapshot_path = os.path.join(args.output_dir, args.exp)
 
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 batch_size = args.batch_size
@@ -137,12 +138,14 @@ loss_fn = losses.cross_entropy_loss()
 
 if __name__ == "__main__":
     ## make logging file
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
     if not os.path.exists(snapshot_path):
         os.makedirs(snapshot_path)
-        os.makedirs(snapshot_path + './checkpoint')
-    if os.path.exists(snapshot_path + '/code'):
-        shutil.rmtree(snapshot_path + '/code')
-    shutil.copytree('.', snapshot_path + '/code', shutil.ignore_patterns(['.git','__pycache__']))
+        os.makedirs(os.path.join(snapshot_path, 'checkpoint'))
+    if os.path.exists(os.path.join(snapshot_path, 'code')):
+        shutil.rmtree(os.path.join(snapshot_path, 'code'))
+    shutil.copytree('.', os.path.join(snapshot_path, 'code'), shutil.ignore_patterns(['.git','__pycache__']))
 
     logging.basicConfig(filename=snapshot_path+"/log.txt", level=logging.INFO,
                         format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
@@ -214,3 +217,32 @@ if __name__ == "__main__":
     }, save_mode_path)
     logging.info("保存最终模型到 {}".format(save_mode_path))
     writer.close()
+    
+    # 加载最佳模型并在测试集上评估
+    logging.info("\n加载最佳模型进行最终测试...")
+    best_model_path = os.path.join(snapshot_path, 'best_model.pth')
+    checkpoint = torch.load(best_model_path)
+    model.load_state_dict(checkpoint['state_dict'])
+    
+    AUROCs, Accus, Senss, Specs, F1 = epochVal_metrics_test(model, test_dataloader)
+    AUROC_avg = np.array(AUROCs).mean()
+    Accu_avg = np.array(Accus).mean()
+    Sens_avg = np.array(Senss).mean()
+    Spec_avg = np.array(Specs).mean()
+    F1_avg = np.array(F1).mean()
+    
+    logging.info("\n最佳模型在测试集上的性能:")
+    logging.info("平均 AUROC: {:.4f}".format(AUROC_avg))
+    logging.info("平均 Accuracy: {:.4f}".format(Accu_avg))
+    logging.info("平均 Sensitivity: {:.4f}".format(Sens_avg))
+    logging.info("平均 Specificity: {:.4f}".format(Spec_avg))
+    logging.info("平均 F1 Score: {:.4f}".format(F1_avg))
+    
+    # 输出每个类别的具体指标
+    for i in range(len(AUROCs)):
+        logging.info("\n类别 {}:".format(i))
+        logging.info("AUROC: {:.4f}".format(AUROCs[i]))
+        logging.info("Accuracy: {:.4f}".format(Accus[i]))
+        logging.info("Sensitivity: {:.4f}".format(Senss[i]))
+        logging.info("Specificity: {:.4f}".format(Specs[i]))
+        logging.info("F1 Score: {:.4f}".format(F1[i]))
